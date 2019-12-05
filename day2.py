@@ -1,5 +1,3 @@
-from random import randrange
-
 def add(prog, i):
     result_loc         = prog[i+3]
     operand1, operand2 = prog[i+1], prog[i+2]
@@ -29,7 +27,6 @@ def execute(prog):
         prog, pos = opcodes[prog[pos]](prog, pos)
 
     return prog
-
 
 assert(execute([1,9,10,3,2,3,11,0,99,30,40,50]) == [3500,9,10,70,2,3,11,0,99,30,40,50])
 assert(execute([1,0,0,0,99]) == [2,0,0,0,99])
