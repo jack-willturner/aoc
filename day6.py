@@ -37,22 +37,24 @@ for k, (c,p) in grid.items():
     for child in c:
         grid[child][1].append(k)
 
-fringe  = [grid['YOU']]
-visited = []
-steps = 0
+class Node():
+    def __init__(self, name, kids=[], depth=0):
+        self.name = name
+        self.kids = kids
+        self.depth = depth
 
-paths = []
+    def __repr__(self):
+        return self.name
 
+def expand(n, depth, visited):
+    kids = []
+    children, parents = grid[n]
+    for node in (children+parents):
+        if node == 'SAN':
+            print(depth)
+        if node not in visited:
+            sub_kids = expand(node,depth+1,(visited+[node]))
+            kids.append(Node(node, sub_kids, depth))
+    return kids
 
-while len(fringe) > 0:
-    children, parents = fringe[0]
-    if 'SAN' in children:
-        break
-    else:
-        for n in (parents+children):
-            if n not in visited:
-                fringe.append(grid[n])
-        steps += 1
-        fringe = fringe[1:]
-
-print(steps)
+n = Node('YOU', expand('YOU',-1,[]), depth=-1)
