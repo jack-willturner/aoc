@@ -13,61 +13,59 @@ def int_between(a,c,b):
 
     return x1 <= c <= x2
 
-grid = {}
+grid = []
 x, y = 0, 0
 with open('inp10.txt', 'r') as f:
     for line in f:
         x = 0
         for loc in line.strip('\n'):
             if loc == '#':
-                grid[(x,y)] = loc
+                grid.append((x,y))
             x += 1
         y += 1
 
 grid_width, grid_height = x, y
 
-def potential(a, b):
+def on_path(a, b):
+
     min_x, max_x = min(a[0], b[0]), max(a[0], b[0])
     min_y, max_y = min(a[1], b[1]), max(a[1], b[1])
 
     cands = []
-    #print(list(range(a_x, b_x)))
-    for x in range(min_x, max_x):
-        for y in range(min_y, max_y):
-            #print(x,y)
-            if (x, y) in list(grid.keys()):
+    for x in range(min_x, max_x+1):
+        for y in range(min_y, max_y+1):
+            if (x, y) in grid:
                 cands.append((x,y))
 
     can_shoot = []
     for c in cands:
-        if is_between(a, c, b):
+        if c != a and is_between(a, c, b):
             can_shoot.append(c)
 
     return can_shoot
 
+def closest(a, ls):
+    if len(ls) == 0:
+        return None
+
+    distances = [distance(a, l) for l in ls]
+    return ls[distances.index(min(distances))]
+
 def partA():
 
     points_to = {}
-    for k, v in grid.items():
-        print(points_to.values())
-        # for all the things that aren't me
+    for k in tqdm(grid):
         icansee = 0
-        for kk, vv in grid.items():
+        for kk in grid:
             if kk != k:
-                #visible = True
-                #for kkk, vvv in grid.items():
-                #    if kkk != k and kkk != kk and int_between(k[0],kkk[0],kk[0]) and int_between(k[1],kkk[1],kk[1]):
-                #        if is_between(k, kkk, kk):
-                #            visible = False
-
-                #if visible:
-                #    icansee += 1
-                if len(potential(k, kk)) == 0:
+                if len(on_path(k, kk)) == 0:
                     icansee += 1
 
-            points_to[k] = icansee
+        points_to[k] = icansee
 
     max_ = max(list(points_to.values()))
+
+    print(max_)
 
     for k, v in points_to.items():
         if v == max_:
@@ -77,50 +75,35 @@ def partA():
     # (30, 34)
 
 def partB():
-    starter = (30, 34)
-
+    #starter = (30, 34)
     # do a lap of the grid
-    pointer = (30, 0)
+    #pointer = (30, 0)
 
-    def potential(a, b):
-        min_x = min(a[0], b[0])
-        max_x = max(a[0], b[0])
+    starter = (11, 13)
+    pointer = (11, 0)
 
-        min_y = min(a[1], b[1])
-        max_y = max(a[1], b[1])
+    upper, lower = [(x,0) for x in range(grid_width+1)], [(x, grid_height) for x in range(grid_width)]
+    right, left  = [(grid_width, y) for y in range(grid_height)], [(0, y) for y in range(grid_height)]
+    boundaries   = upper + right + lower + left
 
-        cands = []
-        #print(list(range(a_x, b_x)))
-        for x in range(min_x, max_x):
-            for y in range(min_y, max_y):
-                print(x,y)
-                if (x,y) in list(grid.keys()):
-                    cands.append((x,y))
+    i = boundaries.index(pointer)
+    zapped = []
+    while len(zapped) < 5:
 
-        can_shoot = []
-        for c in cands:
-            if is_between(a, c, b):
-                can_shoot.append(c)
+        on =  on_path(starter, boundaries[i])
+        remove_me = closest(starter, on) if len(on) > 0 else None
 
-        return can_shoot
+        if remove_me is not None and (len(remove_me) > 0):
+            grid.remove(remove_me)
+            zapped.append(remove_me)
 
-    def do_lap(x, y):
-        while (x <= grid_width):
-            x += 1
-            print(potential(starter, (x,y)))
+        if i == len(boundaries)-1:
+            i = 0
+        else:
+            i += 1
 
-        while(y <= grid_height):
-            y += 1
+    print(zapped)
+    #print(x, y)
 
-        while(x > 0):
-            x -= 1
-
-        while(y > 0):
-            y -= 1
-
-        while(x < pointer):
-            x += 1
-
-    do_lap(pointer[0], pointer[1])
-
-partA()
+#partA()
+partB()
