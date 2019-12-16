@@ -8,6 +8,10 @@ class IntcodeComputer():
         self.name = name
         self.prog = prog + ([0] * 10000) # is there a way to do this lazily?
         self.run = True
+
+        # input/break/output values
+        self.completed = False
+        self.waiting   = False
         self.outputs = []
 
         self.child = child
@@ -36,7 +40,6 @@ class IntcodeComputer():
         return opr
 
     def add(self, modes=[]):
-        #print('ADD: ',modes)
         result_loc         = self.prog[self.ip+3]
         opr0, opr1 = self.access(modes[-1], self.ip+1), self.access(modes[-2], self.ip+2)
 
@@ -48,7 +51,6 @@ class IntcodeComputer():
         self.ip += 4
 
     def mul(self, modes=[]):
-        #print('MUL: ', modes)
         result_loc         = self.prog[self.ip+3]
         opr0, opr1 = self.access(modes[-1], self.ip+1), self.access(modes[-2], self.ip+2)
 
@@ -59,17 +61,22 @@ class IntcodeComputer():
         self.ip += 4
 
     def save(self, modes=[]):
-        if modes[-1] == '0':
-            self.prog[self.prog[self.ip+1]] = self.input[self.input_pointer]
-        elif modes[-1] == '1':
-            self.prog[self.ip+1] = self.input[self.input_pointer]
-        elif modes[-1] == '2':
-            self.prog[self.prog[self.ip+1] + self.relative_base] = self.input[self.input_pointer]
+        if self.input_pointer >= len(self.input):
+            self.run = False
+            self.waiting = True
         else:
-            print('INVALID MODE')
+            self.waiting = False
+            if modes[-1] == '0':
+                self.prog[self.prog[self.ip+1]] = self.input[self.input_pointer]
+            elif modes[-1] == '1':
+                self.prog[self.ip+1] = self.input[self.input_pointer]
+            elif modes[-1] == '2':
+                self.prog[self.prog[self.ip+1] + self.relative_base] = self.input[self.input_pointer]
+            else:
+                print('INVALID MODE')
 
-        self.input_pointer += 1
-        self.ip += 2
+            self.input_pointer += 1
+            self.ip += 2
 
     def out(self, modes=[]):
         self.diagnostic_code = self.access(modes[-1], self.ip+1)
@@ -91,7 +98,6 @@ class IntcodeComputer():
             self.ip += 3
 
     def lt(self, modes=[]):
-        #print('LT : ', modes)
         opr0, opr1 = self.access(modes[-1], self.ip+1), self.access(modes[-2], self.ip+2)
 
         if modes[-3] == '2':
@@ -101,28 +107,26 @@ class IntcodeComputer():
         self.ip += 4
 
     def eq(self, modes=[]):
-        #print('EQ : ', modes)
         opr0, opr1 = self.access(modes[-1], self.ip+1), self.access(modes[-2], self.ip+2)
 
         if modes[-3] == '2':
             self.prog[self.prog[self.ip+3] + self.relative_base] = 1 if opr0 == opr1 else 0
         else:
             self.prog[self.prog[self.ip+3]] = 1 if opr0 == opr1 else 0
-        #self.prog[self.prog[self.ip+3]] = 1 if opr0 == opr1 else 0
         self.ip += 4
 
     def base(self, modes=[]):
         opr0 = self.access(modes[-1], self.ip+1)
         self.relative_base += opr0
-        #print('REL BASE: ', self.relative_base)
         self.ip += 2
 
     def execute(self):
         self.run = True
-        while (len(self.outputs) != 2):
+        while(self.run):
             opcode = str(self.prog[self.ip])[-2:]
             if (opcode == '99'):
-                break
+                self.run = False
+                self.completed = True
             else:
                 opcode = '0'+opcode if (len(opcode) == 1) else opcode
                 modes = (['0','0','0'] + [i for i in str(self.prog[self.ip])[:-2]])[-3:]
