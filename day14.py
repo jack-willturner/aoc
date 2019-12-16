@@ -13,9 +13,9 @@ print(formulas)
 def evaluate_cost(s, res):
 
     print(s, res)
-    time.sleep(1)
+    #time.sleep(1)
     s_= re.split('(\d+)',s.strip())
-    num, mat = int(s_[1]), s_[2]
+    num, mat = int(s_[1]), s_[2].strip()
 
     # base case
     if 'ORE' in mat:
@@ -28,24 +28,30 @@ def evaluate_cost(s, res):
     else:
         cost = 0
         for k, v in formulas.items():
-            if mat in k: # then v is a list of what we need
+
+            if mat == k[-(len(mat)):]: # then v is a list of what we need
+
                 not_enough = True
                 running_tot = 0
                 while(not_enough):
+                    
                     # how much do we actually get?
                     num_we_get = re.split('(\d+)', k.strip())[1]
+
                     running_tot += int(num_we_get)
-                    for vv in v: # e.g ['7 A', '1 E']
+                    for vv in v:
                         c, res = evaluate_cost(vv, res)
+                        #res[mat] += num_we_get
                         cost += c
 
                     if running_tot >= num:
                         not_enough = False
-                        print(running_tot - num)
-                        res[mat] += running_tot - num # - num_we_need
-        print()
+                        if running_tot > int(num_we_get):
+                            res[mat] += int(num_we_get)
+                        else:
+                            res[mat] += int(num_we_get) - num
         return cost, res
 
 res = defaultdict(lambda: 0)
-print()
+
 print(evaluate_cost('1 FUEL',res))
