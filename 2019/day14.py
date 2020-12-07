@@ -1,57 +1,63 @@
-import re
+import queue
+from math import ceil
+import numpy as np
 from collections import defaultdict
-import time
 
 formulas      = {}
 with open('inputs/14', 'r') as f:
     for line in f:
-        lhs, rhs = line.split('=>')[0], line.split('=>')[1].strip()
+        lhs, rhs = line.split('=>')[0].strip(), line.split('=>')[1].strip()
         formulas[rhs] = lhs.split(',')
 
-print(formulas)
+formula_fetcher = {k.split(' ')[1]:k for k in formulas.keys()} # e.g. 'A' : '2 A' -> the key in the formula dict
 
-def evaluate_cost(s, res):
+def splitstr(s):
+    s = s.strip()
+    return int(s.split(' ')[0]), s.split(' ')[1]
 
-    print(s, res)
-    #time.sleep(1)
-    s_= re.split('(\d+)',s.strip())
-    num, mat = int(s_[1]), s_[2].strip()
+def eval(chem, amount):
+    inventory = defaultdict(lambda : 0)    
+    reactions = queue.LifoQueue()
+    reactions.put({"chem": chem, "amount": amount})
 
-    # base case
-    if 'ORE' in mat:
-        return num, res
-    # induction step 1
-    elif num <= res[mat]:
-        res[mat] = res[mat] - num
-        return 0, res
-    # induction step n+1
-    else:
-        cost = 0
-        for k, v in formulas.items():
+    ore_needed = 0
 
-            if mat == k[-(len(mat)):]: # then v is a list of what we need
+    while(not reactions.empty()):
+        r = reactions.get()
+        
+        if 'ORE' in r['chem']:
+            ore_needed += r['amount']
+        elif r['amount'] <= inventory[r['chem']]:
+            inventory[r['chem']] -= r['amount']
+        else:
+            formula   = formula_fetcher[r['chem']]
+            reactants = formulas[formula]
 
-                not_enough = True
-                running_tot = 0
-                while(not_enough):
-                    
-                    # how much do we actually get?
-                    num_we_get = re.split('(\d+)', k.strip())[1]
+            amount_out, chemical_out = splitstr(formula)
+            amount_needed_after_inventory = r['amount'] - inventory[r['chem']]
+            n_batches = ceil(amount_needed_after_inventory / amount_out)
 
-                    running_tot += int(num_we_get)
-                    for vv in v:
-                        c, res = evaluate_cost(vv, res)
-                        #res[mat] += num_we_get
-                        cost += c
+            for reactant in formulas[formula]:
+                reactant_amount, reactant_chem = splitstr(reactant)
+                reactions.put({"chem":reactant_chem, "amount": reactant_amount * n_batches})   
 
-                    if running_tot >= num:
-                        not_enough = False
-                        if running_tot > int(num_we_get):
-                            res[mat] += int(num_we_get)
-                        else:
-                            res[mat] += int(num_we_get) - num
-        return cost, res
+            leftover = (n_batches * amount_out) - amount_needed_after_inventory
+            inventory[r['chem']] = leftover
 
-res = defaultdict(lambda: 0)
+    return ore_needed
 
-print(evaluate_cost('1 FUEL',res))
+
+## PART 1
+ore_needed = eval("FUEL", 1)
+print(ore_needed)
+
+## PART 2
+one_trillion = 1000000000000
+amt = one_trillion // ore_needed
+
+while(eval("FUEL", amt) <= one_trillion):
+    amt += 1000
+
+while(eval("FUEL", amt) >= one_trillion):
+    amt -= 1
+print(amt)
