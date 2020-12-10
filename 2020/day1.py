@@ -62,4 +62,5 @@ from math import prod
 
 for combination in combinations(list):
     if sum(combination) == 2020:
-        return prod(combination)
+        print(prod(combination))
+        break
