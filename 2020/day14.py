@@ -46,7 +46,7 @@ for instr in ls:
         mask = instr
     else:
         loc = int(instr.mem.split('[')[1].split(']')[0])
-        addrs = bitmask_addr(mask.value, loc) ##
+        addrs = bitmask_addr(mask.value, loc) 
         for addr in addrs:
             loc = int(addr,2)
             mem[loc] = int(instr.value)
