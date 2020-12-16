@@ -2,7 +2,7 @@ ls = []
 with open("inputs/day15") as f:
     ls = list(map(int, f.read().split(',')))
 
-def van_dyck_sequence(starting_list_of_ints, number_of_rounds):
+def van_eck_sequence(starting_list_of_ints, number_of_rounds):
     memory = {}
     for i, speak in enumerate(ls):
         memory[speak] = i+1
@@ -22,7 +22,7 @@ def van_dyck_sequence(starting_list_of_ints, number_of_rounds):
     return speak
 
 ## PART 1
-print(van_dyck_sequence(ls, 2021))
+print(van_eck_sequence(ls, 2021))
 
 ## PART 2
-print(van_dyck_sequence(ls, 30000001)
+print(van_eck_sequence(ls, 30000001)
