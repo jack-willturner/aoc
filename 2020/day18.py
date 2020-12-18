@@ -1,6 +1,3 @@
-import queue
-import itertools
-
 exprs = []
 
 with open("inputs/day18") as f:
